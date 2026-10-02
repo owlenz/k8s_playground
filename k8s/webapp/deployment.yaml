@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: go-webapp
-          image: go-webapp:v1
+          image: owlenz/go-webapp:latest
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 4567

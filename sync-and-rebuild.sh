@@ -16,8 +16,8 @@ function build_and_restart_pod {
     set -e
     export PATH=\"\$HOME/.nix-profile/bin:\$PATH\"
     cd $REMOTE_DIR/$DIR_NAME
-    docker build -t go-webapp:v1 .
-    minikube image load go-webapp:v1
+    docker build -t owlenz/go-webapp:latest .
+    minikube image load owlenz/go-webapp:latest
     kubectl rollout restart deployment/webapp-deployment
     kubectl rollout status deployment/webapp-deployment --timeout=60s
   "

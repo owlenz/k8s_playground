@@ -1,0 +1,28 @@
+name: cd
+on:
+  workflow_run:
+    workflows: ["ci"]
+    types: [completed]
+
+jobs:
+  deploy_cluster:
+    if: github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+      - uses: helm/kind-action@v1
+      - name: deploy in a kind env
+        run: |
+          kubectl create secret generic mongo-secrets --from-literal=mongo-pass="${{ secrets.MONGO_PASS }}"
+          kubectl apply -f k8s/
+          kubectl rollout status deployment/mongo-deployment --timeout=60s
+          kubectl rollout status deployment/webapp-deployment --timeout=60s
+
+      - if: failure()
+        run: |
+          kubectl get pods -A
+          kubectl describe pods
+          kubectl logs deploy/webapp-deployment --tail=50
+
