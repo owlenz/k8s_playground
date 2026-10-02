@@ -16,7 +16,7 @@ jobs:
       - name: deploy in a kind env
         run: |
           kubectl create secret generic mongo-secrets --from-literal=mongo-pass="${{ secrets.MONGO_PASS }}"
-          kubectl apply -f k8s/
+          kubectl apply -f k8s/ -R
           kubectl rollout status deployment/mongo-deployment --timeout=60s
           kubectl rollout status deployment/webapp-deployment --timeout=60s
 
