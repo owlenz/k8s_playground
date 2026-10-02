@@ -19,4 +19,6 @@ jobs:
         uses: docker/build-push-action@v7.4.0
         with:
           push: true
-          tags: webapp:${{ github.sha }}
+          tags: |
+            ${{ vars.DOCKERHUB_USERNAME }}/go-webapp:${{ github.sha }}
+            ${{ vars.DOCKERHUB_USERNAME }}/go-webapp:latest
