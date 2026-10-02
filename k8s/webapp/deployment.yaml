@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: webapp-deployment
+  labels:
+    app: webapp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: webapp
+  template:
+    metadata:
+      labels:
+        app: webapp
+    spec:
+      containers:
+        - name: go-webapp
+          image: go-webapp:v1
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 4567
+          env:
+            - name: MONGO_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: mongo-secrets
+                  key: mongo-pass
+            - name: MONGO_URI
+              value: 'mongodb://root:$(MONGO_PASS)@mongo:27017/?authSource=admin'
