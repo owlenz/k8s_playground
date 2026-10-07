@@ -17,6 +17,8 @@
           go
           gopls
           gotools
+          minikube
+          kubectl
         ];
       };
     };

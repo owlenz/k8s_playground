@@ -2,9 +2,8 @@ package main
 
 import (
 	"context"
-	"fmt"
+	"log/slog"
 
-	"log"
 	"net/http"
 	"os"
 	"time"
@@ -15,13 +14,16 @@ import (
 
 func main() {
 	// mongodb connection
+	slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stdout, nil)))
+
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	mongoClient := mongodbConnect()
 
 	defer func() {
 		if err := mongoClient.Disconnect(ctx); err != nil {
-			log.Printf("Error disconnecting: %v", err)
+			slog.Error("Error disconnecting: ", "err", err)
+			os.Exit(1)
 		}
 	}()
 	app := &App{
@@ -38,8 +40,11 @@ func main() {
 func mongodbConnect() *mongo.Client {
 	mongoURI := os.Getenv("MONGO_URI")
 	if mongoURI == "" {
-		mongoURI = "mongodb://root:secretpassword@localhost:27017"
+		slog.Error("MONGO_URI isn't set")
+		os.Exit(1)
 	}
+
+	slog.Warn("MONGO_URI ", "uri", mongoURI)
 
 	clientOpts := options.Client().ApplyURI(mongoURI)
 
@@ -57,12 +62,13 @@ func mongodbConnect() *mongo.Client {
 			}
 			_ = client.Disconnect(context.Background())
 		}
-		log.Printf("mongo not ready (attempt %d): %v", attempt, err)
+		slog.Warn("mongo not ready", "attempt", attempt, "err", err)
 		time.Sleep(time.Duration(attempt) * time.Second)
 	}
 	if err != nil {
-		log.Fatalf("Failed to connect to MongoDB: %v", err)
+		slog.Error("Failed to connect to MongoDB", "err", err)
+		os.Exit(1)
 	}
-	fmt.Println("Successfully connected to MongoDB!")
+	slog.Info("Successfully connected to MongoDB!")
 	return client
 }

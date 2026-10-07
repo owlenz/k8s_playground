@@ -3,7 +3,8 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"log"
+	"fmt"
+	"log/slog"
 	"net/http"
 	"time"
 
@@ -39,28 +40,26 @@ func (a *App) GetUserHandler(w http.ResponseWriter, r *http.Request) {
 				SetLimit(50)
 			cur, err := users.Find(ctx, bson.D{}, opts)
 			if err != nil {
-				log.Printf("getting users: %v", err)
-				return nil, err
+				return nil, fmt.Errorf("finding users %w", err)
 			}
 			defer cur.Close(ctx)
 
 			var res []bson.M
 			if err := cur.All(ctx, &res); err != nil {
-				log.Printf("decoding users: %v", err)
-				return nil, err
+				return nil, fmt.Errorf("decoding users %w", err)
 			}
 			if res == nil {
 				res = []bson.M{}
 			}
 			b, err := json.Marshal(res)
 			if err != nil {
-				return nil, err
+				return nil, fmt.Errorf("marshal users %w", err)
 			}
 			a.UsersCache.set(b, 2*time.Second)
 			return b, nil
 		})
 		if err != nil {
-			log.Printf("getting users: %v", err)
+			slog.Error("failed getting users", "err", err)
 			http.Error(w, "failed to get users", http.StatusInternalServerError)
 			return
 		}
@@ -77,6 +76,7 @@ func (a *App) SetUserHandler(w http.ResponseWriter, r *http.Request) {
 
 	var in User
 	if err := json.NewDecoder(r.Body).Decode(&in); err != nil {
+		slog.Error("bad json payload", "err", err)
 		http.Error(w, "bad json", http.StatusBadRequest)
 		return
 	}
@@ -84,7 +84,7 @@ func (a *App) SetUserHandler(w http.ResponseWriter, r *http.Request) {
 	users := a.DB.Database("devdb").Collection("users")
 	res, err := users.InsertOne(ctx, in)
 	if err != nil {
-		log.Printf("insert user: %v", err)
+		slog.Error("failed saving user", "err", err)
 		http.Error(w, "failed to save user", http.StatusInternalServerError)
 		return
 	}

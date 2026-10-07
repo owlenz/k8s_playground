@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -euo pipefail
+set -eo pipefail
 
 DIR_NAME="k8s_playground"
 SRC="$(cd "$(dirname "$0")/.." && pwd)/$DIR_NAME"
