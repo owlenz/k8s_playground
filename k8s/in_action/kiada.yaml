@@ -18,6 +18,20 @@ spec:
       image: luksa/kiada:0.1
       ports:
         - containerPort: 8080
+          name: http
+      startupProbe:
+        httpGet:
+          port: http
+          path: /
+        periodSeconds: 10
+        failureThreshold: 120
+      livenessProbe:
+        httpGet:
+          port: http
+          path: /
+        periodSeconds: 5
+        failureThreshold: 2
+
     - name: envoy
       image: luksa/kiada-ssl-proxy:0.1
       ports:
@@ -25,7 +39,14 @@ spec:
           containerPort: 8443
         - name: admin
           containerPort: 9901
-      # restartPolicy: Always
-
-
-
+      livenessProbe:
+        exec:
+          command:
+            - /usr/bin/env true
+        httpGet:
+          port: admin
+          path: /ready
+        initialDelaySeconds: 10
+        periodSeconds: 5
+        timeoutSeconds: 2
+        failureThreshold: 3
