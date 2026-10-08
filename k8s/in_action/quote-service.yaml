@@ -20,9 +20,6 @@ spec:
               - -s
               - quit
         postStart:
-          httpGet:
-            port: http
-            path: /container-started
           exec:
             command:
               - sh
