@@ -1,0 +1,36 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: quote
+spec:
+  shareProcessNamespace: true
+  os:
+    name: linux
+  containers:
+    - name: nginx-quote
+      image: nginx:alpine
+      ports:
+        - name: http
+          containerPort: 80
+      lifecycle:
+        preStop:
+          exec:
+            command:
+              - nginx
+              - -s
+              - quit
+        postStart:
+          httpGet:
+            port: http
+            path: /container-started
+          exec:
+            command:
+              - sh
+              - -c
+              - |
+                set -e
+                apk add --no-cache fortune
+                curl -fsS --max-time 20 -O https://luksa.github.io/kiada/book-quotes.txt
+                curl -fsS --max-time 20 -O https://luksa.github.io/kiada/book-quotes.txt.dat
+                fortune book-quotes.txt > /usr/share/nginx/html/quote
+
