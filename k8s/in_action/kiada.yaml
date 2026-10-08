@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: kiada
+spec:
+  shareProcessNamespace: true
+  initContainers:
+    - name: init-demo
+      image: luksa/init-demo:0.1
+    - name: traffic-logger
+      image: luksa/network-traffic-meter:0.1
+      restartPolicy: Always
+    - name: ping
+      image: luksa/network-connectivity-checker:0.1
+
+  containers:
+    - name: kiada
+      image: luksa/kiada:0.1
+      ports:
+        - containerPort: 8080
+    - name: envoy
+      image: luksa/kiada-ssl-proxy:0.1
+      ports:
+        - name: https
+          containerPort: 8443
+        - name: admin
+          containerPort: 9901
+      # restartPolicy: Always
+
+
+
